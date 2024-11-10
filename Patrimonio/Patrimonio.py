@@ -9,7 +9,7 @@ def cargar_procesar_archivo():
     # Paso 1: Título de la app
     st.title("Automatizacion")
 
-    # Paso 2: Subir el archivo semanal "centralizado BAT"
+    # Paso 2: Subir el archivo semanal "Patrimonio mensual"
     archivo_subido = st.file_uploader("Sube el archivo", type=["xlsx"])
 
     if archivo_subido is None:

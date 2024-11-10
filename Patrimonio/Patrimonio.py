@@ -32,7 +32,7 @@ def cargar_procesar_archivo():
 
             # Mantener solo las columnas de interés
             columnas_interes = ["Soc.",	 "Activo fijo",	"SNº",	"Clase",	"Ce.coste",	"Div.",	"Cta.CAP AV01",	"Cta.CAP AV03",	"Cta.CAP AV50",	"Fe.capit.", "Denominación del activo fijo", "VU",	"/", "VTA",	 "/",	"Val.adq.",  "Amo acum.", 	       
-            "Val.cont."  "Val.adq."  "Amo acum.", "Val.cont.", 	  "Val.adq.",  "Amo acum.", "Val.cont.", "Orden inv.",	"Elemento PEP",	"CeBe",	"Número de serie"
+            "Val.cont.",  "Val.adq.",  "Amo acum.", "Val.cont.", 	  "Val.adq.",  "Amo acum.", "Val.cont.", "Orden inv.",	"Elemento PEP",	"CeBe",	"Número de serie"
             ]
             dataframe_bat = dataframe_bat[[col for col in columnas_interes if col in dataframe_bat.columns]]
 

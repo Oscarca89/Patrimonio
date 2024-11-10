@@ -7,7 +7,7 @@ import plotly.graph_objects as go
 
 def cargar_procesar_archivo():
     # Paso 1: Título de la app
-    st.title("Automatizacion")
+    st.title("Automatización de patrimonio mensual 🍺")
 
     # Paso 2: Subir el archivo semanal "Patrimonio mensual"
     archivo_subido = st.file_uploader("Sube el archivo", type=["xlsx"])

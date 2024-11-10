@@ -17,7 +17,7 @@ def cargar_procesar_archivo():
         st.stop()
 
     # Opción para elegir el tipo de pedido
-    tipo_pedido = st.checkbox("Selecciona el tipo de pedido:", ["stock"])
+    tipo_pedido = st.checkbox("Selecciona el tipo de archivo:", ["PATRIMONIO 1"])
 
     if archivo_subido:  
         try:
@@ -31,8 +31,9 @@ def cargar_procesar_archivo():
                     st.stop()
 
             # Mantener solo las columnas de interés
-            columnas_interes = ['PLAZA BAT', 'N TIENDA', 'UPC', 'SKU 7 ELEVEN', 'ARTICULO 7 ELEVEN', 
-                                'CAJETILLAS X PQT', 'CAJETILLAS', 'PAQUETES', 'FECHA DE PEDIDO']
+            columnas_interes = ["Soc.",	 "Activo fijo",	"SNº",	"Clase",	"Ce.coste",	"Div.",	"Cta.CAP AV01",	"Cta.CAP AV03",	"Cta.CAP AV50",	"Fe.capit.",	"Denominación del activo fijo",	 "VU",	 "/",	"VTA",	 "/"	"Val.adq. 	           Amo acum. 	       
+            Val.cont. 	           Val.adq. 	           Amo acum. 	         Val.cont. 	           Val.adq. 	           Amo acum. 	          Val.cont. 	Orden inv.	Elemento PEP	CeBe	Número de serie
+]
             dataframe_bat = dataframe_bat[[col for col in columnas_interes if col in dataframe_bat.columns]]
 
             # Asegurarse de que la columna PAQUETES sea numérica

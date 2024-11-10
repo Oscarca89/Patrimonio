@@ -10,7 +10,7 @@ def cargar_procesar_archivo():
     st.title("Automatizacion")
 
     # Paso 2: Subir el archivo semanal "Patrimonio mensual"
-    archivo_subido = st.file_uploader("Sube el archivo", type=["xlsx"])
+    archivo_subido = st.file_uploader("Sube el archivo", type=["csv"])
 
     if archivo_subido is None:
         st.info("Sube el archivo")

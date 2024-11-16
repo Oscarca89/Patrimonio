@@ -39,9 +39,9 @@ def cargar_procesar_archivo():
 
     # Paso 5: Renombrar las columnas repetidas
     renombrar_columnas = {
-        "Val.adq.": ["Val.adq. 01", "Val.adq. 03", "Val.adq. 50"],
-        "Amo acum.": ["Amo acum. 01", "Amo acum. 03", "Amo acum. 50"],
-        "Val.cont.": ["Val.cont. 01", "Val.cont. 03", "Val.cont. 50"],
+        "Val.adq.": ["Val.adq. 01", "Val.adq. 01", "Val.adq. 01"],
+        "Amo acum.": ["Amo acum. 03", "Amo acum. 03", "Amo acum. 03"],
+        "Val.cont.": ["Val.cont. 50", "Val.cont. 50", "Val.cont. 50"],
     }
 
     nuevos_nombres = []

@@ -1,6 +1,5 @@
 import pandas as pd
 import streamlit as st
-from io import BytesIO
 
 def cargar_procesar_archivo():
     # Paso 1: Título de la app
@@ -38,26 +37,38 @@ def cargar_procesar_archivo():
         st.error(f"Error al unir los datos: {e}")
         st.stop()
 
-    # Paso 5: Filtrar por las columnas relevantes
-    columnas_interes = ["Amo acum.", "Val.cont.", "Val.adq."]
+    # Paso 5: Renombrar las columnas repetidas
+    renombrar_columnas = {
+        "Val.adq.": ["Val.adq. 01", "Val.adq. 03", "Val.adq. 50"],
+        "Amo acum.": ["Amo acum. 01", "Amo acum. 03", "Amo acum. 50"],
+        "Val.cont.": ["Val.cont. 01", "Val.cont. 03", "Val.cont. 50"],
+    }
+
+    nuevos_nombres = []
+    contador = {"Val.adq.": 0, "Amo acum.": 0, "Val.cont.": 0}
+    for col in df_unido.columns:
+        if col in renombrar_columnas and contador[col] < len(renombrar_columnas[col]):
+            nuevo_nombre = renombrar_columnas[col][contador[col]]
+            nuevos_nombres.append(nuevo_nombre)
+            contador[col] += 1
+        else:
+            nuevos_nombres.append(col)
+
+    df_unido.columns = nuevos_nombres
+
+    # Mostrar el DataFrame unido con los nuevos nombres
+    st.write("Vista previa del DataFrame con columnas renombradas:")
+    st.dataframe(df_unido)
+
+    # Paso 6: Filtrar por las columnas de interés
+    columnas_interes = ["Val.adq. 01", "Amo acum. 01", "Val.cont. 01"]
     df_filtrado = df_unido[[col for col in columnas_interes if col in df_unido.columns]]
 
-    # Mostrar datos y opciones de filtrado
-    st.write("Datos filtrados por las columnas de interés:")
-    st.dataframe(df_filtrado)
-
-    # Filtros por columnas específicas
-    for columna in columnas_interes:
-        if columna in df_filtrado.columns:
-            valores_unicos = df_filtrado[columna].dropna().unique()
-            seleccionados = st.multiselect(f"Filtrar por {columna}", valores_unicos)
-            if seleccionados:
-                df_filtrado = df_filtrado[df_filtrado[columna].isin(seleccionados)]
-
-    # Mostrar datos finales filtrados
-    st.write("Datos finales después del filtrado:")
+    # Mostrar datos finales
+    st.write("Datos finales después del procesamiento:")
     st.dataframe(df_filtrado)
 
 # Llamada principal a la función en Streamlit
 if __name__ == "__main__":
     cargar_procesar_archivo()
+

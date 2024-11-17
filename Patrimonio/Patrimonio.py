@@ -1,19 +1,29 @@
 import pandas as pd
 import streamlit as st
 import plotly.express as px
+from io import StringIO
 
-def cargar_datos_iterativo(archivo_subido, hojas):
+def convertir_excel_a_csv(archivo_excel, hojas):
     """
-    Carga datos de hojas específicas en fragmentos iterativos para optimizar memoria.
+    Convierte un archivo Excel a CSV (en memoria) por cada hoja especificada.
     """
-    df_total = []
-    for hoja in hojas:
-        # Leer hoja completa
-        df_hoja = pd.read_excel(archivo_subido, sheet_name=hoja, header=1)
-        # Dividir en fragmentos manejables
-        fragmentos = [df_hoja[i:i + 50000] for i in range(0, len(df_hoja), 50000)]
-        df_total.extend(fragmentos)
-    return pd.concat(df_total, ignore_index=True)
+    csv_buffers = []
+    with pd.ExcelFile(archivo_excel) as xls:
+        for hoja in hojas:
+            df = pd.read_excel(xls, sheet_name=hoja, header=1)
+            buffer = StringIO()
+            df.to_csv(buffer, index=False)
+            buffer.seek(0)  # Regresar al inicio del buffer
+            csv_buffers.append(buffer)
+    return csv_buffers
+
+
+def cargar_datos_desde_csv(csv_buffers):
+    """
+    Carga y concatena datos desde múltiples buffers CSV.
+    """
+    df_list = [pd.read_csv(buffer) for buffer in csv_buffers]
+    return pd.concat(df_list, ignore_index=True)
 
 
 def optimizar_columnas(df):
@@ -41,13 +51,14 @@ def cargar_procesar_archivo():
 
     hojas_requeridas = ['OCT 2024 PT1', 'OCT 2024 PT2']
 
-    # Cargar datos iterativamente
+    # Convertir a CSV y cargar
     try:
-        st.info("Cargando datos por fragmentos... Esto puede tardar unos minutos.")
-        df_unido = cargar_datos_iterativo(archivo_subido, hojas_requeridas)
+        st.info("Convirtiendo el archivo Excel a CSV... Esto puede tardar unos minutos.")
+        csv_buffers = convertir_excel_a_csv(archivo_subido, hojas_requeridas)
+        df_unido = cargar_datos_desde_csv(csv_buffers)
         st.success("Datos cargados correctamente.")
     except Exception as e:
-        st.error(f"Error al cargar el archivo: {e}")
+        st.error(f"Error al procesar el archivo: {e}")
         st.stop()
 
     # Renombrar columnas repetidas
@@ -103,8 +114,4 @@ def cargar_procesar_archivo():
 if __name__ == "__main__":
     cargar_procesar_archivo()
 
-
-# Llamada principal a la función en Streamlit
-if __name__ == "__main__":
-    cargar_procesar_archivo()
 

@@ -2,6 +2,7 @@ import pandas as pd
 import streamlit as st
 import plotly.express as px
 
+@st.cache_data
 def cargar_procesar_archivo():
     # Paso 1: Título de la app
     st.title("Automatización de patrimonio mensual 🍺")

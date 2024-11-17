@@ -2,15 +2,17 @@ import pandas as pd
 import streamlit as st
 import plotly.express as px
 
-def cargar_datos_por_partes(archivo_subido, hojas, chunksize=50000):
+def cargar_datos_iterativo(archivo_subido, hojas):
     """
-    Carga datos desde un archivo Excel por partes usando Pandas.
+    Carga datos de hojas específicas en fragmentos iterativos para optimizar memoria.
     """
     df_total = []
     for hoja in hojas:
-        chunk_iterador = pd.read_excel(archivo_subido, sheet_name=hoja, header=1, chunksize=chunksize)
-        for chunk in chunk_iterador:
-            df_total.append(chunk)
+        # Leer hoja completa
+        df_hoja = pd.read_excel(archivo_subido, sheet_name=hoja, header=1)
+        # Dividir en fragmentos manejables
+        fragmentos = [df_hoja[i:i + 50000] for i in range(0, len(df_hoja), 50000)]
+        df_total.extend(fragmentos)
     return pd.concat(df_total, ignore_index=True)
 
 
@@ -39,10 +41,10 @@ def cargar_procesar_archivo():
 
     hojas_requeridas = ['OCT 2024 PT1', 'OCT 2024 PT2']
 
-    # Cargar datos por partes
+    # Cargar datos iterativamente
     try:
-        st.info("Cargando datos por partes... Esto puede tardar unos minutos.")
-        df_unido = cargar_datos_por_partes(archivo_subido, hojas_requeridas)
+        st.info("Cargando datos por fragmentos... Esto puede tardar unos minutos.")
+        df_unido = cargar_datos_iterativo(archivo_subido, hojas_requeridas)
         st.success("Datos cargados correctamente.")
     except Exception as e:
         st.error(f"Error al cargar el archivo: {e}")
@@ -96,6 +98,11 @@ def cargar_procesar_archivo():
         st.plotly_chart(fig)
     else:
         st.warning("No se encontraron todas las columnas necesarias para la gráfica.")
+
+# Llamada principal a la función en Streamlit
+if __name__ == "__main__":
+    cargar_procesar_archivo()
+
 
 # Llamada principal a la función en Streamlit
 if __name__ == "__main__":

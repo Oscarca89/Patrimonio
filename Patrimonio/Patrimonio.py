@@ -1,5 +1,6 @@
 import pandas as pd
 import streamlit as st
+import plotly.express as px
 
 def cargar_procesar_archivo():
     # Paso 1: Título de la app
@@ -39,9 +40,9 @@ def cargar_procesar_archivo():
 
     # Paso 5: Renombrar las columnas repetidas
     renombrar_columnas = {
-        "Val.adq.": ["Val.adq. 01", "Val.adq. 01", "Val.adq. 01"],
-        "Amo acum.": ["Amo acum. 03", "Amo acum. 03", "Amo acum. 03"],
-        "Val.cont.": ["Val.cont. 50", "Val.cont. 50", "Val.cont. 50"],
+        "Val.adq.": ["Val.adq. 01", "Val.adq. 03", "Val.adq. 50"],
+        "Amo acum.": ["Amo acum. 01", "Amo acum. 03", "Amo acum. 50"],
+        "Val.cont.": ["Val.cont. 01", "Val.cont. 03", "Val.cont. 50"],
     }
 
     nuevos_nombres = []
@@ -56,17 +57,37 @@ def cargar_procesar_archivo():
 
     df_unido.columns = nuevos_nombres
 
-    # Mostrar el DataFrame unido con los nuevos nombres
-    st.write("Vista previa del DataFrame con columnas renombradas:")
+    # Paso 6: Filtrar por columnas adicionales en la barra lateral
+    st.sidebar.header("Filtros dinámicos")
+    columnas_filtro = ["Soc.", "Clase", "Supranumero", "GZ"]
+
+    for columna in columnas_filtro:
+        if columna in df_unido.columns:
+            valores_unicos = df_unido[columna].dropna().unique()
+            seleccionados = st.sidebar.multiselect(f"Filtrar por {columna}", valores_unicos, default=valores_unicos)
+            if seleccionados:
+                df_unido = df_unido[df_unido[columna].isin(seleccionados)]
+
+    # Mostrar los datos filtrados
+    st.write("Datos después de aplicar los filtros dinámicos:")
     st.dataframe(df_unido)
 
-    # Paso 6: Filtrar por las columnas de interés
-    columnas_interes = ["Val.adq. 01", "Amo acum. 01", "Val.cont. 01"]
-    df_filtrado = df_unido[[col for col in columnas_interes if col in df_unido.columns]]
+    # Paso 7: Gráfica del total de columnas seleccionadas
+    columnas_totales = ["Val.adq. 01", "Amo acum. 01", "Val.cont. 01"]
+    if all(col in df_unido.columns for col in columnas_totales):
+        df_totales = df_unido[columnas_totales].sum().reset_index()
+        df_totales.columns = ["Columna", "Total"]
 
-    # Mostrar datos finales
-    st.write("Datos finales después del procesamiento:")
-    st.dataframe(df_filtrado)
+        # Crear la gráfica
+        fig = px.bar(df_totales, x="Columna", y="Total", title="Totales por columna", labels={"Total": "Total", "Columna": "Columna"})
+        st.plotly_chart(fig)
+    else:
+        st.warning("No se encontraron todas las columnas necesarias para la gráfica.")
+
+# Llamada principal a la función en Streamlit
+if __name__ == "__main__":
+    cargar_procesar_archivo()
+
 
 # Llamada principal a la función en Streamlit
 if __name__ == "__main__":

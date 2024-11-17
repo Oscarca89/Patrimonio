@@ -5,19 +5,28 @@ from io import BytesIO
 import plotly.express as px
 
 
-def leer_hoja_excel_optimizadamente(archivo, hoja, max_filas=50000):
+def leer_hoja_excel_optimizadamente(archivo, hoja, max_filas=None):
     """
     Lee una hoja de Excel en fragmentos utilizando openpyxl para optimizar memoria.
+    Maneja encabezados y celdas vacías.
     """
     wb = openpyxl.load_workbook(archivo, read_only=True)
     ws = wb[hoja]
 
-    # Leer los datos de la hoja
-    filas = ws.iter_rows(min_row=2, max_row=max_filas, values_only=True)
-    columnas = [cell.value for cell in next(ws.iter_rows(min_row=1, max_row=1, values_only=True))]
+    # Leer encabezados (primera fila)
+    encabezados = [
+        cell.value if cell.value is not None else f"Columna_{idx+1}"
+        for idx, cell in enumerate(ws[1])
+    ]
+
+    # Leer datos de filas (excluyendo encabezados)
+    filas = []
+    for row in ws.iter_rows(min_row=2, max_row=max_filas, values_only=True):
+        if any(cell is not None for cell in row):  # Ignorar filas completamente vacías
+            filas.append(row)
 
     # Convertir a DataFrame
-    df = pd.DataFrame(filas, columns=columnas)
+    df = pd.DataFrame(filas, columns=encabezados)
     return df
 
 

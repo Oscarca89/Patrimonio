@@ -2,41 +2,28 @@ import pandas as pd
 import streamlit as st
 import plotly.express as px
 
-# Cargar y procesar datos con caché
-@st.cache_data
-def cargar_datos(archivo_subido):
-    with pd.ExcelFile(archivo_subido) as xls:
-        hojas_requeridas = ['OCT 2024 PT1', 'OCT 2024 PT2']
-        if not all(hoja in xls.sheet_names for hoja in hojas_requeridas):
-            raise ValueError(f"El archivo debe contener las hojas: {hojas_requeridas}")
+def cargar_datos_por_partes(archivo_subido, hojas, chunksize=50000):
+    """
+    Carga datos desde un archivo Excel por partes usando Pandas.
+    """
+    df_total = []
+    for hoja in hojas:
+        chunk_iterador = pd.read_excel(archivo_subido, sheet_name=hoja, header=1, chunksize=chunksize)
+        for chunk in chunk_iterador:
+            df_total.append(chunk)
+    return pd.concat(df_total, ignore_index=True)
 
-        # Leer ambas hojas comenzando desde la fila 2 (índice 1 en pandas)
-        df_hoja1 = pd.read_excel(xls, sheet_name='OCT 2024 PT1', header=1)
-        df_hoja2 = pd.read_excel(xls, sheet_name='OCT 2024 PT2', header=1)
 
-        # Unir los DataFrames
-        df_unido = pd.concat([df_hoja1, df_hoja2], ignore_index=True)
-
-        # Renombrar columnas repetidas
-        renombrar_columnas = {
-            "Val.adq.": ["Val.adq. 01", "Val.adq. 03", "Val.adq. 50"],
-            "Amo acum.": ["Amo acum. 01", "Amo acum. 03", "Amo acum. 50"],
-            "Val.cont.": ["Val.cont. 01", "Val.cont. 03", "Val.cont. 50"],
-        }
-
-        nuevos_nombres = []
-        contador = {"Val.adq.": 0, "Amo acum.": 0, "Val.cont.": 0}
-        for col in df_unido.columns:
-            if col in renombrar_columnas and contador[col] < len(renombrar_columnas[col]):
-                nuevo_nombre = renombrar_columnas[col][contador[col]]
-                nuevos_nombres.append(nuevo_nombre)
-                contador[col] += 1
-            else:
-                nuevos_nombres.append(col)
-
-        df_unido.columns = nuevos_nombres
-
-    return df_unido
+def optimizar_columnas(df):
+    """
+    Optimiza tipos de columnas para reducir uso de memoria.
+    """
+    for col in df.select_dtypes(include=["int64", "float64"]).columns:
+        df[col] = pd.to_numeric(df[col], downcast="unsigned")
+    for col in df.select_dtypes(include=["object"]).columns:
+        if df[col].nunique() / len(df[col]) < 0.5:  # Si hay pocos valores únicos
+            df[col] = df[col].astype("category")
+    return df
 
 
 def cargar_procesar_archivo():
@@ -50,13 +37,38 @@ def cargar_procesar_archivo():
         st.info("Sube el archivo para continuar")
         st.stop()
 
-    # Cargar datos con caché
+    hojas_requeridas = ['OCT 2024 PT1', 'OCT 2024 PT2']
+
+    # Cargar datos por partes
     try:
-        df_unido = cargar_datos(archivo_subido)
-        st.success("Datos cargados y procesados correctamente.")
-    except ValueError as e:
-        st.error(str(e))
+        st.info("Cargando datos por partes... Esto puede tardar unos minutos.")
+        df_unido = cargar_datos_por_partes(archivo_subido, hojas_requeridas)
+        st.success("Datos cargados correctamente.")
+    except Exception as e:
+        st.error(f"Error al cargar el archivo: {e}")
         st.stop()
+
+    # Renombrar columnas repetidas
+    renombrar_columnas = {
+        "Val.adq.": ["Val.adq. 01", "Val.adq. 03", "Val.adq. 50"],
+        "Amo acum.": ["Amo acum. 01", "Amo acum. 03", "Amo acum. 50"],
+        "Val.cont.": ["Val.cont. 01", "Val.cont. 03", "Val.cont. 50"],
+    }
+
+    nuevos_nombres = []
+    contador = {"Val.adq.": 0, "Amo acum.": 0, "Val.cont.": 0}
+    for col in df_unido.columns:
+        if col in renombrar_columnas and contador[col] < len(renombrar_columnas[col]):
+            nuevo_nombre = renombrar_columnas[col][contador[col]]
+            nuevos_nombres.append(nuevo_nombre)
+            contador[col] += 1
+        else:
+            nuevos_nombres.append(col)
+
+    df_unido.columns = nuevos_nombres
+
+    # Optimizar columnas
+    df_unido = optimizar_columnas(df_unido)
 
     # Filtros dinámicos en la barra lateral
     st.sidebar.header("Filtros dinámicos")
@@ -84,11 +96,6 @@ def cargar_procesar_archivo():
         st.plotly_chart(fig)
     else:
         st.warning("No se encontraron todas las columnas necesarias para la gráfica.")
-
-# Llamada principal a la función en Streamlit
-if __name__ == "__main__":
-    cargar_procesar_archivo()
-
 
 # Llamada principal a la función en Streamlit
 if __name__ == "__main__":

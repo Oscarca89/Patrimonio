@@ -12,45 +12,32 @@ if archivo_subido is None:
     st.info("Sube el archivo de centralizado")
     st.stop()
 
-# Paso 3: Leer el archivo subido y manejar excepciones detalladamente
+# Paso 3: Leer el archivo subido
 try:
     # Cargar el archivo Excel
-    st.write("Cargando el archivo...")
     excel_data = pd.ExcelFile(archivo_subido)
 
     # Obtener los nombres de las hojas
     hojas = excel_data.sheet_names
-    st.write("Hojas encontradas:", hojas)
 
     # Mostrar las primeras 3 hojas (si hay menos, mostrará todas las disponibles)
     hojas_a_previsualizar = hojas[:3]
+
+    st.write("Hojas encontradas:", hojas)
     st.write(f"Previsualizando las primeras {len(hojas_a_previsualizar)} hojas:")
 
     # Crear una lista para almacenar los resúmenes
-    resumenes = []
     hoja_1_2_unidas = None  # Variable para almacenar las hojas unidas
 
     # Iterar sobre las hojas a previsualizar
     for i, hoja in enumerate(hojas_a_previsualizar):
-        st.write(f"### Leyendo hoja: {hoja}")
+        st.write(f"### Hoja: {hoja}")
         
         # Leer la hoja
         df = pd.read_excel(excel_data, sheet_name=hoja)
-        st.write(f"Dimensiones de la hoja '{hoja}': {df.shape}")
-
-        # Generar el resumen de la hoja
-        resumen = {
-            "Hoja": hoja,
-            "Filas": len(df),
-            "Columnas": len(df.columns),
-            "Columnas principales": list(df.columns[:5]) if len(df.columns) > 5 else list(df.columns)
-        }
-        resumenes.append(resumen)
 
         # Mostrar una tabla con las primeras filas de la hoja
-        st.write(f"Resumen de la hoja '{hoja}':")
-        st.write(resumen)
-        st.write("Vista previa:")
+        st.write(f"Vista previa de la hoja '{hoja}':")
         st.dataframe(df.head())
 
         # Si es la primera o segunda hoja, unirlas
@@ -58,19 +45,23 @@ try:
             if hoja_1_2_unidas is None:
                 hoja_1_2_unidas = df  # Inicializar con la primera hoja
             else:
-                if list(hoja_1_2_unidas.columns) == list(df.columns):
-                    hoja_1_2_unidas = pd.concat([hoja_1_2_unidas, df], ignore_index=True)
-                    st.write(f"Unidas las filas de la hoja '{hoja}' con la anterior.")
-                else:
-                    st.warning(f"Las columnas de la hoja {hoja} no coinciden con la hoja anterior. No se unirán.")
+                hoja_1_2_unidas = pd.concat([hoja_1_2_unidas, df], ignore_index=True)
 
-    # Mostrar la hoja combinada
+    # Si se combinó exitosamente
     if hoja_1_2_unidas is not None:
         st.write("### Hoja combinada (1 y 2 unidas):")
         st.dataframe(hoja_1_2_unidas)
 
+        # Calcular la suma total de las 3 primeras columnas
+        try:
+            columnas_suma = hoja_1_2_unidas.iloc[:, :3]  # Seleccionar las primeras 3 columnas
+            suma_total = columnas_suma.sum(numeric_only=True)  # Sumar solo columnas numéricas
+            st.write("### Suma total de las 3 primeras columnas:")
+            st.write(suma_total)
+        except Exception as e:
+            st.error("No se pudieron calcular las sumas. Verifica que las primeras columnas sean numéricas.")
+            st.error(str(e))
+
 except Exception as e:
-    st.error("Se produjo un error al leer el archivo:")
-    error_message = traceback.format_exc()
-    st.code(error_message, language="plaintext")
+    st.error(f"Error al leer el archivo: {str(e)}")
 

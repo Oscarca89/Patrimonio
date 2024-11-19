@@ -54,5 +54,5 @@ try:
         st.dataframe(hoja_1_2_unidas)
 
 except Exception as e:
-    st.error(f"Error al leer el archivo: {e}")
+    st.error(f"Error al leer el archivo: {str(e)}")
 

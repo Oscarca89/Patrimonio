@@ -3,7 +3,7 @@ import streamlit as st
 import traceback
 
 # Paso 1: Título de la aplicación
-st.title("Carga y proceso de centralizado BAT")
+st.title("Automatización de patrimonio mensual 🍺")
 
 # Paso 2: Subir el archivo semanal "centralizado BAT" desde la interfaz de Streamlit
 archivo_subido = st.file_uploader("Sube el archivo", type=["xlsx"])
